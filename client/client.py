@@ -1,8 +1,15 @@
 import requests, json, argparse, sys, time
 
+# Set up command line arguments
+# TODO: writeup
+parser = argparse.ArgumentParser(description='Client')
+parser.add_argument('address', help='Destination IP address')
+parser.add_argument('port', help='Destionation PORT number')
+parser.add_argument('file', help='File name')
+args = parser.parse_args()
+
 def main():
-	with open('test.txt', 'rb') as payload:
-		rq = requests.post("http://vt3.host.cs.st-andrews.ac.uk:5001/accept_file", files={'test.txt': open('test.txt', 'rb')})
+	rq = requests.post("http://"+ args.address  +":"+ args.port  +"/accept_file", files={args.file: open(args.file, 'rb')})
 
 
 if __name__ == "__main__":
