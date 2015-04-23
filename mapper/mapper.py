@@ -73,6 +73,8 @@ def handler(cl_socket, cl_addr):
 		data_to_send['data'] = shuffled[s]
 		to_reducer.send(json.dumps(data_to_send))
 		to_reducer.close()
+		r = requests.get('http://'+ args.remote_address +':'+ args.remote_port +'/schedule_subjob/'+str(job_id))
+
 	
 			# TODO: split into dict and count
 	# import hashlib

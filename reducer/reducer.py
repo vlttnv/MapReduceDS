@@ -34,23 +34,25 @@ def handler(cl_socket, cl_addr):
 	dt = dt['data']
 	lock.acquire()
 	try:
+		if job_id not in words:
+			words[job_id] = {}
 		for word in dt:
-			if word.keys()[0] not in words:
-				words[word.keys()[0]] = word.values()[0]
+			if word.keys()[0] not in words[job_id]:
+				words[job_id][word.keys()[0]] = word.values()[0]
 			else:
-				words[word.keys()[0]] += word.values()[0]
+				words[job_id][word.keys()[0]] += word.values()[0]
 	finally:
 		lock.release()
 	#print d
 	payload = {
 			"job_id": job_id,
-			"data": words
+			"data": words[job_id]
 			}
 
 	headers = {'content-type': 'application/json'}
 	rq = requests.post("http://"+ args.remote_address  +":"+ args.remote_port  +"/complete_subjob", headers=headers, data=json.dumps(payload))
 
-	print sum(words.itervalues())
+	print sum(words[job_id].itervalues())
  
 def heartbeat(m_addr, m_port, l_port):
 	r = requests.get('http://'+ m_addr +':'+ m_port +'/register_reducer/'+ l_port)

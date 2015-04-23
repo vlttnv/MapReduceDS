@@ -39,6 +39,16 @@ def heardbeat(type,port):
 
 	return "OK", 200
 
+@master_app.route('/schedule_subjob/<int:job_id>')
+def schedule_subjob(job_id):
+	job = models.Job().query.filter_by(id=job_id).one()
+
+	job.expected += 1
+	db.session.add(job)
+	db.session.commit()
+	return "OK", 200
+
+
 @master_app.route('/get_mappers')
 def get_mappers():
 	return json.dumps(mappers), 200
@@ -49,7 +59,7 @@ def get_reducers():
 
 @master_app.route('/single_job/<int:id>')
 def single_job(id):
-	jobz = models.Subjob().query.filter_by(job_id=id).all()
+	jobz = models.Final().query.filter_by(job_id=id).one()
 	return render_template('single_job.html', jobs=jobz)
 
 @master_app.route('/complete_subjob', methods=['POST'])
@@ -68,9 +78,36 @@ def complete_subjob():
 				}
 		sj = models.Subjob()
 		sj.job_id = int(post_data['job_id'])
-		sj.data = str(post_data['data'])
+		sj.data = json.dumps(post_data['data'])
+
 		db.session.add(sj)
 		db.session.commit()
+
+		j = models.Job().query.filter_by(id=post_data['job_id']).one()
+		j.expected -= 1
+		db.session.add(j)
+		db.session.commit()
+
+		if j.expected == 0:
+			j.status = 2
+			final = {}
+			all_data = models.Subjob.query.filter_by(job_id=int(post_data['job_id'])).all()
+			for sub in all_data:
+				sub = json.loads(sub.data)
+				for word in sub:
+					if word not in final:
+						final[word] = int(sub[word])
+					else:
+						final[word] += int(sub[word])
+			fn = models.Final()
+			fn.job_id = post_data['job_id']
+			fn.data = json.dumps(final)
+			db.session.add(fn)
+			db.session.commit()
+
+			print "Job done"
+
+
 		return "Thank you, come again", 200
 	return "Need to be post", 400
 
