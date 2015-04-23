@@ -1,4 +1,4 @@
-from master import master_app
+from master import master_app, models, db
 from flask import request
 import time
 import json
@@ -10,7 +10,11 @@ reducers = dict()
 
 @master_app.route('/')
 def index():
-	return "Python rocks"
+	jobz = models.Job.query.all()
+	jobs = {}
+	for job in jobz:
+		jobs[job.id] = job.status
+	return json.dumps(jobs)
 
 @master_app.route('/register_mapper/<int:port>')
 def register_mapper(port):
@@ -51,7 +55,12 @@ def accept_file():
 		fl.save(os.path.join(master_app.config['UPLOAD_FOLDER'], fl.filename))
 
 		job_id = 1
-		distribute_file(fl.filename, job_id)
+		job = models.Job()
+		job.status = 0
+		db.session.add(job)
+		db.session.commit()
+
+		distribute_file(fl.filename, job.id)
 	return str(job_id), 200
 
 """
