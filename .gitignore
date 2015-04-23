@@ -1,6 +1,7 @@
 # my
 uploads/
 config.py
+*.txt
 
 # db
 app.db

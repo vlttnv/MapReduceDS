@@ -1,5 +1,0 @@
-cat dog
-elephant dog
-zebra dog
-hoho dog
-skimtar dog
