@@ -33,6 +33,7 @@ def handler(cl_socket, cl_addr):
 	data2 = json.loads(data)
 	reducers = data2['reducers']
 	#data_data = " ".join(data2['data'])
+	job_id = data2['job_id']
 	sent_list = " ".join(data2['data'])
 	words =  sent_list.split(" ")
 
@@ -67,7 +68,10 @@ def handler(cl_socket, cl_addr):
 
 		to_reducer = socket(AF_INET, SOCK_STREAM)
 		to_reducer.connect(addr)
-		to_reducer.send(json.dumps(shuffled[s]))
+		data_to_send = {}
+		data_to_send['job_id'] = job_id
+		data_to_send['data'] = shuffled[s]
+		to_reducer.send(json.dumps(data_to_send))
 		to_reducer.close()
 	
 			# TODO: split into dict and count

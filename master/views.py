@@ -1,5 +1,5 @@
 from master import master_app, models, db
-from flask import request
+from flask import request, render_template
 import time
 import json
 import os
@@ -14,7 +14,7 @@ def index():
 	jobs = {}
 	for job in jobz:
 		jobs[job.id] = job.status
-	return json.dumps(jobs)
+	return render_template('index.html', jobs=jobz)
 
 @master_app.route('/register_mapper/<int:port>')
 def register_mapper(port):
@@ -47,6 +47,34 @@ def get_mappers():
 def get_reducers():
 	return json.dumps(reducers), 200
 
+@master_app.route('/single_job/<int:id>')
+def single_job(id):
+	jobz = models.Subjob().query.filter_by(job_id=id).all()
+	return render_template('single_job.html', jobs=jobz)
+
+@master_app.route('/complete_subjob', methods=['POST'])
+def complete_subjob():
+	if request.method == 'POST':
+		if not request.json:
+			print "Not json"
+			return "Need JSON", 400
+		if not ('job_id' and 'data' in request.json):
+			print "invalid"
+			return "Invalid JSON", 400
+
+		post_data = {
+				'job_id': int(request.json['job_id']),
+				'data': request.json['data']
+				}
+		sj = models.Subjob()
+		sj.job_id = int(post_data['job_id'])
+		sj.data = str(post_data['data'])
+		db.session.add(sj)
+		db.session.commit()
+		return "Thank you, come again", 200
+	return "Need to be post", 400
+
+
 @master_app.route('/accept_file', methods=['POST'])
 def accept_file():
 	if request.method == 'POST':
@@ -54,14 +82,13 @@ def accept_file():
 		fl = request.files[fl_keys[0]]
 		fl.save(os.path.join(master_app.config['UPLOAD_FOLDER'], fl.filename))
 
-		job_id = 1
 		job = models.Job()
 		job.status = 0
 		db.session.add(job)
 		db.session.commit()
 
 		distribute_file(fl.filename, job.id)
-	return str(job_id), 200
+	return str(job.id), 200
 
 """
 HELPER FUNCTION

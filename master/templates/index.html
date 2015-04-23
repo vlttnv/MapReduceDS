@@ -1,0 +1,4 @@
+{% for job in jobs %}
+<h1><a href="{{ url_for('single_job', id=job.id) }}">{{ job.id }}</a></h1>
+<h2>{{ job.status }}</h2>
+{% endfor %}

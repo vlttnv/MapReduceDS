@@ -20,6 +20,7 @@ lock = threading.Lock()
 
 def handler(cl_socket, cl_addr):
 	dt = ""
+	job_id = 0
 	while 1:
 		data = cl_socket.recv(1024*4)
 		dt = dt + data
@@ -29,6 +30,8 @@ def handler(cl_socket, cl_addr):
 	cl_socket.close()
 
 	dt = json.loads(dt)
+	job_id = dt['job_id']
+	dt = dt['data']
 	lock.acquire()
 	try:
 		for word in dt:
@@ -38,7 +41,15 @@ def handler(cl_socket, cl_addr):
 				words[word.keys()[0]] += word.values()[0]
 	finally:
 		lock.release()
-	#print dt
+	#print d
+	payload = {
+			"job_id": job_id,
+			"data": words
+			}
+
+	headers = {'content-type': 'application/json'}
+	rq = requests.post("http://"+ args.remote_address  +":"+ args.remote_port  +"/complete_subjob", headers=headers, data=json.dumps(payload))
+
 	print sum(words.itervalues())
  
 def heartbeat(m_addr, m_port, l_port):
