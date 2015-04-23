@@ -10,6 +10,7 @@ args = parser.parse_args()
 
 def main():
 	rq = requests.post("http://"+ args.address  +":"+ args.port  +"/accept_file", files={args.file: open(args.file, 'rb')})
+	print rq.text
 
 
 if __name__ == "__main__":

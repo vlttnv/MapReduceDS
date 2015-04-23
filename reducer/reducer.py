@@ -14,20 +14,20 @@ parser.add_argument('-hB', '--heartbeat', type=int, default=1, help='Heartbeat i
 parser.add_argument('-s', '--silent', action='store_true', default=False, help='Enable silent mode')
 
 args = parser.parse_args()
- 
+
+words = {}
+
 def handler(cl_socket, cl_addr):
-	print "Accepted connection from: ", cl_addr
+	dt = ""
 	while 1:
 		data = cl_socket.recv(1024*4)
+		dt = dt + data
 		# TODO: Close here
 		if not data:
 			break
-		else:
-			print data
-			# TODO: split into dict and count
-			# import hashlib
-			# int*hashlib.sha1(a).hexdigest(), 16) % num of red
 	cl_socket.close()
+	
+	print dt
 
  
 def heartbeat(m_addr, m_port, l_port):

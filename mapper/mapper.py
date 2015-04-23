@@ -19,64 +19,60 @@ args = parser.parse_args()
  
 def handler(cl_socket, cl_addr):
 	print "Accepted connection from: ", cl_addr
+	data = ""
 	while 1:
-		data = cl_socket.recv(1024*4)
+		dt = cl_socket.recv(1024*4)
+		data = data + dt
+
+
 		# TODO: Close here
-		if not data:
+		if not dt:
 			break
-		else:
-			msg = "You sent me: %s" % "ok"
-
-			data = json.loads(data)
-			reducers = data['reducers']
-			print reducers
-			words =  data['data'].split(" ")
-			word_count = {}
-			for word in words:
-				if word in word_count:
-					if word != "":
-						word_count[word] += 1
-				else:
-					if word != "":
-						word_count[word] = 1
-
-			for word in word_count:
-				which = int(hashlib.sha1(word).hexdigest(), 16) % len(reducers)
-
-				host = reducers[which].split(":")[0]
-				port = int(reducers[which].split(":")[1])
-				buf = 1024
-				addr = (host, port)
-
-				to_reducer = socket(AF_INET, SOCK_STREAM)
-				to_reducer.connect(addr)
-				to_reducer.send(json.dumps({word:word_count[word]}))
-				to_reducer.close()
-			"""
-			# get address
-			host = mp.split(":")[0]
-			port = int(mp.split(":")[1])
-			buf = 1024
-			addr = (host, port)
-			# create socket
-			to_reducer = socket(AF_INET, SOCK_STREAM)
-			to_reducer.connect(addr)
-		
-			# send file
-			data = "HEHE"
-
-			if not data:
-				break
-			to_reducer.send(data)
-
-			data = to_reducer.recv(buf)
-			to_reducer.close()
-			"""
-			# TODO: split into dict and count
-			# import hashlib
-			# int*hashlib.sha1(a).hexdigest(), 16) % num of red
-			cl_socket.send(msg)
 	cl_socket.close()
+	
+	data2 = json.loads(data)
+	reducers = data2['reducers']
+	#data_data = " ".join(data2['data'])
+	sent_list = " ".join(data2['data'])
+	words =  sent_list.split(" ")
+
+	word_count = {}
+	for word in words:
+		word = word.strip(".\n")
+		word = word.lower()
+		if word in word_count:
+			if word != "":
+				word_count[word.lower()] += 1
+		else:
+			if word != "":
+				word_count[word.lower()] = 1
+
+	shuffled = {}
+	r_id = 0
+	for r in reducers:
+		shuffled[str(r_id)] = []
+		r_id += 1
+	
+	reducers = reducers.keys()
+	for word in word_count:
+		which = int(int(hashlib.sha1(word).hexdigest(), 16) % len(reducers))
+		shuffled[str(which)].append({word:word_count[word]})
+
+
+	for s in shuffled:
+		host = reducers[int(s)].split(":")[0]
+		port = int(reducers[int(s)].split(":")[1])
+		buf = 1024
+		addr = (host, port)
+
+		to_reducer = socket(AF_INET, SOCK_STREAM)
+		to_reducer.connect(addr)
+		to_reducer.send(json.dumps(shuffled[s]))
+		to_reducer.close()
+	
+			# TODO: split into dict and count
+	# import hashlib
+	# int*hashlib.sha1(a).hexdigest(), 16) % num of red
 
  
 def heartbeat(m_addr, m_port, l_port):
