@@ -10,7 +10,3 @@ class Subjob(db.Model):
 	job_id		= db.Column(db.Integer)
 	data			= db.Column(db.Text)
 
-class Final(db.Model):
-	id				= db.Column(db.Integer, primary_key=True)
-	job_id		= db.Column(db.Integer)
-	data			= db.Column(db.Text)
